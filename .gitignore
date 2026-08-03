@@ -30,8 +30,20 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — nenhum valor real versionado.
+# O .env.example é a documentação de setup do projeto e PRECISA ser versionado.
 .env*
+!.env.example
+
+# Material bruto baixado do Instagram: pesado e reproduzível pelo script.
+# O manifesto e o contact sheet ficam versionados — são o registro de origem.
+/_fotos-ig/*.jpg
+/_fotos-ig/*.jpeg
+/_fotos-ig/*.png
+/_fotos-ig/*.webp
+# Os .mp4 faltavam nesta lista e eram 20MB dos 37MB do repositório — material
+# bruto, e já versionado em forma otimizada em /public/videos.
+/_fotos-ig/*.mp4
 
 # vercel
 .vercel

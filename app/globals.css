@@ -1,26 +1,901 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================================
+   PR GOLD — sistema visual "Vitrine de cristal"
+   ============================================================================
+   A metáfora governa tudo: um mostruário de joalheria é feito de VIDRO E FIO,
+   não de cartões flutuantes. Por isso, em todo o site:
+
+     - raio de borda: 0 (nenhum canto arredondado, exceto controles circulares)
+     - sombra: nenhuma (a separação vem de fio, não de elevação)
+     - separação: hairline dourada de 1px
+
+   Toda cor mora aqui. Hex solto em componente é bug.
+   ========================================================================= */
+
+@theme {
+  /* ── Escuro: o mostruário ─────────────────────────────────────────────── */
+  --color-onix: #080808; /* preto principal — fundo das seções escuras */
+  --color-onix-2: #111111; /* preto secundário — barra do topo e rodapé */
+  --color-grafite: #1a1a1a; /* superfície elevada dentro do escuro */
+
+  /* ── Dourado: dois tokens, e a escolha entre eles NÃO é estética ───────
+     Contrastes medidos (não estimados):
+       #D4AF37 sobre #080808 = 9,52:1 -> passa AAA
+       #D4AF37 sobre #F4F0E8 = 1,85:1 -> REPROVA em qualquer tamanho
+       #77621F sobre #F4F0E8 = 5,20:1 -> passa AA
+       #77621F sobre #EBE6DB = 4,75:1 -> passa AA na superfície alternada
+
+     O tom escuro nasceu como #8F6C22 e foi corrigido: media 4,26:1, abaixo do
+     mínimo de 4,5 para texto normal — e é justamente em texto pequeno
+     (etiquetas de 10-11px) que ele mais aparece.
+
+     Regra: `ouro` só sobre fundo escuro; `ouro-escuro` para texto sobre fundo
+     claro. Componentes reutilizáveis recebem `tone` e nunca adivinham. */
+  --color-ouro: #d4af37;
+  --color-ouro-claro: #e7cb78; /* hover e estado ativo, só no escuro */
+  --color-ouro-escuro: #77621f; /* texto e ícone dourados no claro */
+
+  /* ── Claro: o balcão ──────────────────────────────────────────────────── */
+  --color-marfim: #f4f0e8; /* off-white — fundo das seções claras */
+  --color-marfim-2: #ebe6db; /* superfície alternada dentro do claro */
+  --color-cinza: #d5d2cc; /* texto secundário sobre o escuro */
+  /* Texto secundário sobre o claro.
+     Nasceu #6B6660 com a anotação "5,2:1". A medição não confirma: aquele
+     valor dá 5,00:1 sobre marfim e 4,57:1 sobre marfim-2 — folga de 0,07
+     sobre o mínimo, e não os 4,75:1 que estavam escritos aqui.
+
+     Zero folga é caro: a camada de luz de ambiente derrubava a superfície
+     alternada para 4,32:1. Sete pontos por canal mais escuro resolvem sem
+     mudar a cor de forma perceptível.
+       #645F59 sobre #F4F0E8 = 5,56:1
+       #645F59 sobre #EBE6DB = 5,08:1
+       com a atmosfera por cima, o pior caso vira 4,90:1              */
+  --color-cinza-2: #645f59;
+
+  /* ── Cores de sistema ─────────────────────────────────────────────────── */
+  /* Verde do WhatsApp: constante em qualquer projeto. É reconhecimento, não
+     identidade — mudar isto custa cliques. */
+  --color-whats: #25d366;
+  --color-alerta: #c0392b;
+  --color-sucesso: #2e6b4f;
+
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  /* ── Forma ────────────────────────────────────────────────────────────────
+     Escala de raio no espírito da Apple: o raio cresce com a superfície, em
+     vez de um valor único aplicado a tudo. Um chip de 32px com o mesmo raio de
+     um cartão de 400px parece derretido; um cartão grande com raio pequeno
+     parece recortado à faca.                                                */
+  --radius-sm: 0.625rem; /* 10px — chips, etiquetas, controles pequenos */
+  --radius-md: 0.875rem; /* 14px — campos de formulário, botões retangulares */
+  --radius-lg: 1.25rem; /* 20px — cartões de produto, painéis */
+  --radius-xl: 1.75rem; /* 28px — blocos grandes e diálogos */
+
+  /* ── Elevação ─────────────────────────────────────────────────────────────
+     Duas sombras empilhadas: uma curta que ancora o cartão na superfície e uma
+     longa e muito difusa que dá a profundidade. Uma sombra só, média, é o que
+     produz aquele aspecto de caixa colada.                                  */
+  --shadow-cartao:
+    0 1px 2px rgba(8, 8, 8, 0.04), 0 8px 24px rgba(8, 8, 8, 0.06);
+  --shadow-cartao-alto:
+    0 2px 6px rgba(8, 8, 8, 0.06), 0 18px 44px rgba(8, 8, 8, 0.12);
+
+  /* Curva de movimento da Apple: sai devagar, chega devagar, sem elástico. */
+  --ease-suave: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================================================
+   Base
+   ========================================================================= */
+
+/* `data-scroll-behavior` é exigência do Next 16: sem esse atributo o
+   framework não desliga mais o scroll suave durante navegação SPA, e cada
+   troca de página vira uma rolagem animada até o topo. */
+html {
+  scroll-behavior: smooth;
+  background: var(--color-onix);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-marfim);
+  color: var(--color-onix);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/* Regra anti-zoom do iOS: abaixo de 16px o Safari dá zoom sozinho ao focar
+   um campo, e a página nunca mais volta ao enquadramento original. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+::selection {
+  background: var(--color-ouro);
+  color: var(--color-onix);
+}
+
+/* Foco visível consistente. Dourado no escuro, dourado escuro no claro —
+   os dois passam AA contra o fundo em que aparecem. */
+:focus-visible {
+  outline: 2px solid var(--color-ouro);
+  outline-offset: 2px;
+}
+
+.tone-light :focus-visible,
+.tone-light:focus-visible {
+  outline-color: var(--color-ouro-escuro);
+}
+
+/* ============================================================================
+   Tipografia — editorial contemporânea
+   ============================================================================
+   Fraunces no título, Archivo na interface.
+
+   A Fraunces se redesenha por tamanho (eixo `opsz`), então o `font-optical-
+   sizing: auto` abaixo não é enfeite: sem ele o navegador congela um desenho
+   só, e o título de 48px sai com o contraste de um parágrafo.
+
+   Ela também é o oposto da garalda que estava aqui: contraste baixo, serifa em
+   cunha, terminais chapados. Em peso 300 fica anêmica — o caráter dela vive em
+   400-500, e é por isso que a escala de peso subiu ao trocar a família.
+
+   Os eixos `SOFT` e `WONK` são o que separa a Fraunces de qualquer serifa de
+   catálogo. WONK liga as formas tortas, e ele é LIGADO no display e DESLIGADO
+   no display pequeno: em 48px a torção lê como desenho, em 16px lê como erro.
+                                                                             */
+
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-optical-sizing: auto;
+  /* SOFT tira o bico do terminal; WONK 1 solta a cauda do `g` e a inclinação
+     do `a`. É aqui que a fonte deixa de ser neutra. */
+  font-variation-settings:
+    "SOFT" 24,
+    "WONK" 1;
+  letter-spacing: -0.018em;
+  /* Português é cheio de acento, e a Fraunces tem ascendente alta: abaixo de
+     1.1 o til da linha de baixo encosta na perna da linha de cima. */
+  line-height: 1.1;
+}
+
+/* Título pequeno: nome de peça, nome de categoria, cabeçalho de cartão.
+   Peso maior e sem torção — o que dá caráter em corpo grande vira ruído aqui. */
+.font-display-sm {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-optical-sizing: auto;
+  font-variation-settings:
+    "SOFT" 24,
+    "WONK" 0;
+  letter-spacing: -0.005em;
+}
+
+/* Etiqueta / eyebrow — o rótulo de vitrine.
+   A Archivo tem x alto e é mais larga que a Manrope que estava aqui: no mesmo
+   0,28em de tracking a etiqueta virava uma linha esticada demais. O eixo de
+   largura fecha o talhe em vez de encolher o corpo, que continua em 11px. */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 500;
+  font-variation-settings: "wdth" 92;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em; /* compensa o tracking da última letra */
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* ============================================================================
+   CLASSES DE COMPONENTE
+   ============================================================================
+   TUDO daqui para baixo vive em `@layer components` — e isso não é
+   organização, é correção de bug.
+
+   CSS sem camada VENCE CSS em camada, independente de especificidade. Como as
+   utilitárias do Tailwind ficam na camada `utilities`, uma classe solta como
+   `.trilho { display: flex }` passaria por cima de um `md:grid` aplicado no
+   mesmo elemento — o resultado foi uma grade que continuava flex no desktop,
+   com os itens em largura zero.
+
+   Dentro de `components`, a ordem volta a ser a esperada: utilitária ganha.
+   ========================================================================= */
+
+@layer components {
+
+/* ============================================================================
+   O FEIXE — elemento-assinatura
+   ============================================================================
+   A fotografia da PR Gold tem uma constante: um eixo vertical de luz quente
+   atrás da peça, sobre fundo preto. Aqui esse feixe deixa de ser acidente
+   fotográfico e vira o device estrutural do site.                          */
+
+/* 1. Divisor de seção: o feixe visto de perfil — um fio que nasce e morre no
+      escuro, em vez de uma linha cheia de ponta a ponta. */
+.feixe-divisor {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-ouro) 50%,
+    transparent
+  );
+  opacity: 0.55;
+}
+
+.tone-light .feixe-divisor {
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--color-ouro-escuro) 50%,
+    transparent
+  );
+  opacity: 0.4;
+}
+
+/* 2. Feixe vertical de fundo: usado atrás do hero e da faixa de CTA final.
+      Não é um gradiente de página inteira — é uma coluna estreita de luz. */
+.feixe-vertical {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    58% 42% at 50% 50%,
+    rgba(212, 175, 55, 0.16) 0%,
+    rgba(212, 175, 55, 0.05) 42%,
+    transparent 72%
+  );
+}
+
+/* 3. LUZ DE AMBIENTE — o feixe deixa de ser de seção e vira atmosfera.
+      ==================================================================
+      Camada presa à janela: o conteúdo rola, a luz fica. É o mesmo papel que a
+      sombra de folhas cumpre na PR Grife, e aqui fecha melhor ainda, porque a
+      luz é extensão visual do próprio ouro.
+
+      ELA VEM NA FRENTE DO CONTEÚDO, e isso não é escolha estética. Toda seção
+      deste projeto pinta fundo opaco (`Section` aplica bg-onix ou bg-marfim);
+      uma camada atrás do conteúdo ficaria invisível, não sutil. Na frente, com
+      blend, ela lê como luz no ar entre o olho e a peça.
+
+      z-30: acima do conteúdo e abaixo de todo cromo — barra inferior e botão
+      flutuante (40), cabeçalho (50), gaveta (60), busca (70), modais (75/80).
+      A luz nunca lava um controle.
+
+      O TETO DE OPACIDADE É MEDIDO, não estimado. Camada na frente do conteúdo
+      também cai sobre o texto. Pior caso das seções claras — `cinza-2` sobre
+      marfim, hoje 5,2:1 — com dourado em `screen`:
+        5% -> 4,64:1  passa em AA
+        8% -> 4,45:1  REPROVA
+      Daí `--luz-teto-claro: 0.05`. É piso de acessibilidade, e é por isso que a
+      luz lê forte no ônix e quase sussurra no marfim.                        */
+
+.luz-ambiente {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  overflow: hidden;
+  /* Escrita pelo IntersectionObserver, por seção. A transição longa é o que
+     faz a mudança virar deriva em vez de corte. */
+  --luz-forca: 0.25;
+  /* Deslocamento do halo, escrito pelo scroll. Zero sem movimento. */
+  --luz-desvio: 0px;
+  transition: opacity 600ms linear;
+}
+
+/* Halo: a massa de luz. Fica um pouco à esquerda do núcleo para o conjunto não
+   virar um eixo simétrico, que leria como divisória. */
+.luz-ambiente::before {
+  content: "";
+  position: absolute;
+  top: 5%;
+  left: 55%;
+  width: 32vw;
+  height: 90vh;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--color-ouro) 40%, transparent),
+    color-mix(in srgb, var(--color-ouro) 14%, transparent) 42%,
+    transparent 72%
+  );
+  filter: blur(20px);
+  opacity: calc(var(--luz-forca) * 0.24);
+  mix-blend-mode: screen;
+  transform: translate3d(0, var(--luz-desvio), 0);
+  transition:
+    opacity 600ms linear,
+    transform 120ms linear;
+}
+
+/* Núcleo: a origem da luz. Nasce e morre em transparente — uma linha reta de
+   ponta a ponta leria como neon, que é exatamente o que isto não é. */
+.luz-ambiente::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  left: 70%;
+  width: 2px;
+  height: 120vh;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--color-ouro) 20%, transparent) 22%,
+    color-mix(in srgb, var(--color-ouro-claro) 60%, transparent) 50%,
+    color-mix(in srgb, var(--color-ouro) 20%, transparent) 78%,
+    transparent
+  );
+  /* 28%, dentro da faixa de 20-35% do briefing. Em 50% o núcleo parava de ser
+     origem de luz e virava uma linha desenhada atravessando os cartões — o
+     "neon" que esta camada existe para não ser. */
+  opacity: calc(var(--luz-forca) * 0.28);
+  mix-blend-mode: plus-lighter;
+  transition: opacity 600ms linear;
+}
+
+/* Sobre fundo claro o BLEND MUDA, e essa é a parte que não é óbvia.
+   `screen` só sabe clarear. O marfim já está em 96% de luminosidade, então
+   `screen(marfim, ouro)` devolve quase marfim: a luz não esquenta a superfície,
+   ela desaparece nela. Quem aquece um fundo claro é `multiply`.
+
+   E o blend certo é também o mais seguro. Medido, `cinza-2` sobre marfim:
+     screen   8%  -> 4,45:1  reprova
+     multiply 8%  -> 4,92:1  passa
+     multiply 20% -> 4,80:1  passa
+   `multiply` escurece texto e fundo JUNTOS, então a razão entre eles quase não
+   se move — dá para ser mais visível e mais seguro ao mesmo tempo.
+
+   A SUPERFÍCIE ALTERNADA foi o que obrigou a corrigir `--color-cinza-2` (ver o
+   bloco do token). Com o valor antigo, halo mais grão derrubavam `marfim-2`
+   para 4,32:1. Com o valor corrigido, o pior caso existente — "Monte sua peça",
+   força 0,55 sobre marfim-2 — mede 4,90:1.
+
+   Medidos com halo E grão somados:
+     marfim,   força 1,00 -> 5,31:1
+     marfim-2, força 0,55 -> 4,90:1
+   Ainda assim, força acima de 0,8 em superfície alternada não foi medida. */
+.luz-ambiente[data-fundo="claro"]::before {
+  mix-blend-mode: multiply;
+  opacity: calc(var(--luz-forca) * 0.18);
+}
+
+.luz-ambiente[data-fundo="claro"]::after {
+  mix-blend-mode: multiply;
+  opacity: calc(var(--luz-forca) * 0.22);
+}
+
+/* Grão — a camada que faz o conjunto assentar.
+   ==========================================================================
+   Sem ele, halo e feixe pairam sobre um fundo liso e leem como dois gradientes
+   colados na tela. Com ele, a página inteira passa a estar dentro do mesmo ar,
+   e é isso que dá aos cartões o aspecto de flutuar sob uma camada.
+
+   Mesma técnica do `.veu-botanico` da PR Grife: ruído `feTurbulence` repetido
+   em 200x200, em `multiply`. O tom é quente e escuro (marrom-ouro), porque
+   `multiply` usa a cor como filtro — cinza puro sujaria o marfim. */
+.luz-ambiente__grao {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+  /* O tom do grão é MEDIDO, não escolhido. Em 0.30/0.25/0.14 com alfa 0.10 —
+     o valor da PR Grife — ele derrubava a superfície alternada para 4,32:1.
+     Claro e em 0.08 ele mantém a textura (que vem da variação do ruído, não da
+     escurecida média) e devolve o contraste. */
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0.55 0 0 0 0 0.50 0 0 0 0 0.38 0.08 0 0 0 0'/></filter><rect width='200' height='200' filter='url(%23g)'/></svg>");
+  background-size: 200px 200px;
+  background-repeat: repeat;
+}
+
+/* Sobre o ônix o grão em `multiply` não teria o que escurecer. Ele inverte
+   para `screen` e vira poeira de luz, que é o mesmo gesto lido no negativo. */
+.luz-ambiente[data-fundo="escuro"] .luz-ambiente__grao {
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+
+/* Camada decorativa não tem mecanismo de parada, então ela obedece sem
+   discussão — diferente da faixa de elos, que tem pausa por ponteiro e foco. */
+@media (prefers-reduced-motion: reduce) {
+  .luz-ambiente::before {
+    transform: none;
+    transition: opacity 600ms linear;
+  }
+}
+
+/* Papel não tem atmosfera. */
+@media print {
+  .luz-ambiente {
+    display: none;
+  }
+}
+
+/* 4. Varredura no hover do card: o feixe atravessa a foto UMA vez.
+      Não é loop, não pulsa, não brilha. Passa e acaba. */
+.feixe-varre {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(231, 203, 120, 0.22) 50%,
+    transparent 62%
+  );
+  transform: translateX(-100%);
+}
+
+@media (hover: hover) {
+  .group:hover .feixe-varre {
+    opacity: 1;
+    transform: translateX(100%);
+    transition:
+      transform 0.72s cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 0.24s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feixe-varre,
+  .group:hover .feixe-varre {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   A VITRINE — cartões soltos, com respiro
+   ============================================================================
+   As células deixaram de ser contíguas: cada peça é um cartão com raio, borda
+   fina e sombra, e o que as separa é espaço.
+
+   O respiro cresce com a tela. Em 320px, 12px já é o suficiente para separar
+   sem roubar largura da foto; no desktop, 24px é o que faz cada peça ser lida
+   como um objeto e não como uma linha de uma tabela.                        */
+
+.vitrine {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .vitrine {
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vitrine {
+    gap: 1.5rem;
+  }
+}
+
+/* ============================================================================
+   CARTÃO
+   ============================================================================
+   A superfície. No claro, a profundidade vem de sombra; no escuro, sombra não
+   existe opticamente — sobre #080808 ela não tem para onde escurecer. Lá a
+   elevação vem de a superfície CLAREAR e da borda dourada ganhar presença.
+   É a mesma lógica do modo escuro da Apple.                                 */
+
+.cartao {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: var(--color-grafite);
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  /* `isolate` cria contexto de empilhamento próprio: sem ele, a foto com
+     `scale` no hover escapa por cima do raio arredondado. */
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    transform 0.4s var(--ease-suave),
+    box-shadow 0.4s var(--ease-suave),
+    border-color 0.4s var(--ease-suave),
+    background-color 0.4s var(--ease-suave);
+}
+
+.tone-light .cartao {
+  background: var(--color-bg-cartao, #fffdf9);
+  border-color: rgba(8, 8, 8, 0.07);
+  box-shadow: var(--shadow-cartao);
+}
+
+@media (hover: hover) {
+  .cartao:hover {
+    transform: translateY(-3px);
+    border-color: rgba(212, 175, 55, 0.4);
+    background: #191919;
+  }
+
+  .tone-light .cartao:hover {
+    border-color: rgba(8, 8, 8, 0.1);
+    background: #ffffff;
+    box-shadow: var(--shadow-cartao-alto);
+  }
+}
+
+/* Cartão que não é clicável: fica parado. Elevar no hover algo que não
+   responde ao clique é promessa falsa. */
+.cartao--estatico:hover {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cartao,
+  .cartao:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   Container
+   ========================================================================= */
+
+:root {
+  --shell-pad: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --shell-pad: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --shell-pad: 3rem;
+  }
+}
+
+.shell {
+  width: 100%;
+  max-width: 96rem;
+  margin-inline: auto;
+  padding-inline: var(--shell-pad);
+}
+
+/* ============================================================================
+   Interação
+   ========================================================================= */
+
+/* Resposta ao toque em menos de 100ms. Sem isso o usuário toca duas vezes.
+   O pressionar é rápido (120ms) e o soltar é lento (400ms): é essa assimetria
+   que faz o controle parecer físico em vez de animado. */
+.tap {
+  transition:
+    transform 0.4s var(--ease-suave),
+    background-color 0.3s var(--ease-suave),
+    color 0.3s var(--ease-suave),
+    border-color 0.3s var(--ease-suave),
+    box-shadow 0.3s var(--ease-suave),
+    opacity 0.3s var(--ease-suave);
+}
+
+.tap:active {
+  transform: scale(0.96);
+  transition-duration: 0.12s;
+}
+
+/* Zoom discreto na foto do card. 1.03 é o limite antes de virar efeito. */
+.img-zoom {
+  transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .group:hover .img-zoom {
+    transform: scale(1.03);
+  }
+}
+
+/* Entrada gradual das seções (aplicada por IntersectionObserver). */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tap,
+  .tap:active,
+  .img-zoom,
+  .group:hover .img-zoom {
+    transition: none;
+    transform: none;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Esconde a barra de rolagem dos carrosséis mantendo o gesto. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Trilho de carrossel com snap. A sangria é só à direita: o primeiro item
+   alinha com a primeira letra do título e o último aparece cortado pela
+   borda da tela, que é o sinal de "tem mais para o lado". */
+.trilho {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  margin-right: calc(-1 * var(--shell-pad));
+  padding-right: var(--shell-pad);
+  scroll-padding-left: 0;
+}
+
+.trilho > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trilho {
+    scroll-behavior: auto;
+  }
+}
+
+/* Variante sem sangria, para a galeria da página de produto: ali o trilho
+   ocupa a coluna inteira e cada foto é um slide cheio. Com a sangria dos
+   carrosséis de seção, sobrava um pedaço da próxima foto e o snap parava
+   fora de lugar. */
+.trilho--cheio {
+  margin-right: 0;
+  padding-right: 0;
+}
+
+/* ── Faixa de categorias ──────────────────────────────────────────────────
+   Carrossel de toque no mobile (cards parcialmente visíveis, que é o que
+   sinaliza "tem mais para o lado") e vitrine de fio no desktop.
+
+   A troca precisa acontecer aqui, numa media query de CSS, e não misturando
+   `.trilho` com `md:grid` no JSX: são duas declarações de `display` no mesmo
+   elemento, e quem vence depende da camada — exatamente o bug que originou
+   este bloco.                                                              */
+.faixa-categorias {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  /* A sangria à direita é o que deixa o próximo cartão aparecendo pela metade
+     — o sinal de "tem mais para o lado". O padding vertical dá espaço para a
+     sombra do cartão não ser cortada pelo overflow. */
+  margin-right: calc(-1 * var(--shell-pad));
+  padding-right: var(--shell-pad);
+  padding-block: 0.5rem;
+}
+
+.faixa-categorias > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 42vw;
+  max-width: 15rem;
+}
+
+@media (min-width: 768px) {
+  .faixa-categorias {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    overflow: visible;
+    margin-right: 0;
+    padding-right: 0;
+  }
+
+  .faixa-categorias > * {
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .faixa-categorias {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* ============================================================================
+   CABEÇALHO — o rótulo da barra
+   ============================================================================
+   Um só lugar para o tipo dos rótulos do topo. Antes eram duas strings de
+   utilitárias quase iguais em pontos diferentes do JSX, e elas já divergiram
+   uma vez: o link do menu tinha 0,16em de tracking e o botão de catálogo,
+   0,14em, lado a lado na mesma barra.                                        */
+
+.cabecalho__link {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1;
+  /* Cabeçalho é ônix: aqui o dourado claro é o que passa (9,52:1). */
+  color: var(--color-marfim);
+  transition: color 0.2s ease;
+}
+
+@media (hover: hover) {
+  .cabecalho__link:hover {
+    color: var(--color-ouro);
+  }
+}
+
+/* ============================================================================
+   FAIXA DE ELOS — exposição contínua
+   ============================================================================
+   Não é carrossel: não há cartão, borda, fundo próprio, seta nem barra. Cada
+   peça é um recorte com transparência que pousa direto no marfim, e o que a
+   separa da vizinha é espaço.
+
+   O corte dos seis arquivos é o mesmo (1360x512), então a área visual é
+   idêntica sem que nenhuma imagem precise ser esticada ou aparada para caber.  */
+
+.faixa-elos-janela {
+  overflow: hidden;
+  padding-block: 1rem;
+  /* As joias entram e saem por dissolução. Sem isto elas seriam decepadas na
+     borda da tela, que é o gesto de um slider — exatamente o que a faixa não
+     quer parecer. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 14%,
+    #000 86%,
+    transparent
+  );
+  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+}
+
+.faixa-elos {
+  display: flex;
+  align-items: center;
+  /* NÃO usar `gap` aqui. A animação anda -50% da largura total; com gap, metade
+     da tira mede uma volta MENOS meio intervalo, e o laço salta esse resto a
+     cada ciclo. O respiro mora dentro do item, então metade da tira é uma volta
+     exata. */
+  width: max-content;
+  /* 30s para a volta inteira: rápido o bastante para a faixa não parecer
+     parada, lento o bastante para o olho acompanhar cada peça. */
+  animation: faixa-elos-desliza 30s linear infinite;
+  will-change: transform;
+}
+
+/* A lista está escrita duas vezes. Ao chegar em -50% a segunda volta está
+   exatamente onde a primeira começou — não existe emenda para o olho achar. */
+@keyframes faixa-elos-desliza {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* O item se dispõe aqui, e não por utilitária: `flex` vive na layer de
+   utilities, posterior a esta, e venceria as regras de fallback abaixo. */
+/* A largura do item é a peça MAIS o respiro dela: 200+32 no telefone, 248+40
+   no tablet, 280+48 no desktop. O padding é metade do respiro de cada lado, de
+   modo que entre duas peças vizinhas sobra o respiro inteiro. */
+.faixa-elos > li {
+  display: flex;
+  justify-content: center;
+  /* Sem o `0 0`, o item encolhe para caber na janela e a peça sai achatada. */
+  flex: 0 0 auto;
+  width: 14.5rem;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 641px) {
+  .faixa-elos > li {
+    width: 18rem;
+    padding-inline: 1.25rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .faixa-elos > li {
+    width: 20.5rem;
+    padding-inline: 1.5rem;
+  }
+}
+
+.faixa-elos__peca {
+  position: relative;
+  display: block;
+  width: 100%;
+  transition:
+    transform 450ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    filter 450ms ease;
+}
+
+/* Halo dourado ATRÁS da corrente, nunca dentro do arquivo: assim o brilho é
+   ajustável e a peça continua intacta. Cobre só a faixa alta do quadro, onde a
+   corrente está — sobre o nome ele viraria névoa. */
+.faixa-elos__peca::before {
+  content: "";
+  position: absolute;
+  inset: -12% -2% 56% -2%;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 62% 96% at 50% 62%,
+    color-mix(in srgb, var(--color-ouro) 13%, transparent),
+    transparent 66%
+  );
+  pointer-events: none;
+}
+
+.faixa-elos__peca img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Pausa no ponteiro E no foco. Sem o `focus-within`, quem chega de teclado
+   persegue um alvo em movimento. */
+.faixa-elos:hover,
+.faixa-elos:focus-within {
+  animation-play-state: paused;
+}
+
+/* O realce é de vitrine: a peça sobe três pixels e ganha um fio de brilho.
+   Passar disso vira zoom de e-commerce. */
+@media (hover: hover) {
+  .faixa-elos__peca:hover {
+    transform: translate3d(0, -3px, 0) scale(1.025);
+    filter: brightness(1.05);
+  }
+}
+
+/* `prefers-reduced-motion` NÃO desliga a faixa — decisão do cliente, tomada
+   depois de a alternativa ter sido apresentada.
+
+   O que resta da regra: o passo cai pela metade (60s por volta, uns 47px/s) e o
+   realce de hover perde a transição. A
+   pausa por ponteiro e por foco continua valendo, e é ela que atende ao
+   critério de "parar conteúdo em movimento" — sem ela, esta faixa não teria
+   nenhum mecanismo de parada. Não remova essa pausa. */
+@media (prefers-reduced-motion: reduce) {
+  .faixa-elos {
+    animation-duration: 60s;
+  }
+
+  .faixa-elos__peca {
+    transition: none;
+  }
+}
+
+} /* fim de @layer components */
