@@ -18,12 +18,7 @@ import {
   SecaoInstagram,
   SecaoMomentos,
 } from "@/components/home/Vitrines";
-import {
-  SecaoCtaFinal,
-  SecaoExperiencia,
-  SecaoMontePeca,
-  SecaoSobre,
-} from "@/components/home/Editorial";
+import { SecaoCtaFinal, SecaoMontePeca, SecaoSobre } from "@/components/home/Editorial";
 
 /**
  * Home.
@@ -68,14 +63,13 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero banner={banner} />
+      <Hero banner={banner} beneficios={beneficios.filter((b) => b.active)} />
       {elos.length >= MIN_ELOS_FAIXA && <FaixaElos elos={elos} />}
       <SecaoCategorias categorias={categorias.filter((c) => c.active)} />
       <SecaoDestaques produtos={selecao} />
       <SecaoMontePeca />
       <SecaoColecoes colecoes={colecoes.filter((c) => c.active)} />
       <SecaoMomentos momentos={momentos.filter((m) => m.active)} />
-      <SecaoExperiencia beneficios={beneficios.filter((b) => b.active)} />
       <SecaoSobre />
       <SecaoInstagram
         posts={instagram.filter((p) => p.active)}

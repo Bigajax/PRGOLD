@@ -257,7 +257,10 @@ export const beneficiosPadrao = [
     description: "Peças criadas no nosso ateliê, inclusive sob encomenda.",
   },
   {
-    icon: "Sparkles",
+    // `PenLine`, não `Sparkles`: o traço de quem desenha e grava é o gesto
+    // da personalização. O brilhinho lia como "efeito de IA" — vetado pelo
+    // cliente aqui e no ícone do catálogo.
+    icon: "PenLine",
     title: "Personalização",
     description:
       "Conte a ideia e desenvolvemos uma peça pensada para a sua história.",

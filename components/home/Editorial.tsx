@@ -12,7 +12,6 @@ import { mensagemAtendimento, waLink } from "@/lib/whatsapp";
 import { Section, SectionInner } from "@/components/ui/Section";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button, ButtonExterno, ButtonLink } from "@/components/ui/Button";
-import type { Benefit } from "@/types";
 
 /* ── 6. Monte sua peça ──────────────────────────────────────────────────── */
 
@@ -81,21 +80,32 @@ export function SecaoMontePeca() {
           {/* Estas quatro etapas SÃO uma sequência — o que a pessoa escolhe
               primeiro condiciona o que ela escolhe depois. Aqui a numeração
               carrega informação, e não é enfeite. */}
+          {/* No mobile cada etapa é uma LINHA compacta (número à esquerda,
+              conteúdo à direita): quatro cartões verticais de tela inteira
+              faziam a sequência custar quatro rolagens. O cartão respirado
+              volta no `sm`, onde as etapas ficam duas a duas. */}
           <ol className="vitrine grid-cols-1 sm:grid-cols-2">
             {montePeca.etapas.map((etapa, i) => (
-              <li key={etapa.titulo} className="cartao cartao--estatico p-6 md:p-7">
-                <span className="flex size-9 items-center justify-center rounded-full border border-ouro-escuro/30 font-sans text-[11px] font-medium tracking-[0.08em] text-ouro-escuro">
+              <li
+                key={etapa.titulo}
+                className="cartao cartao--estatico flex items-start gap-4 p-4 sm:block sm:p-6 md:p-7"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-ouro-escuro/30 font-sans text-[11px] font-medium tracking-[0.08em] text-ouro-escuro">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <Icone
-                  nome={etapa.icone}
-                  className="mt-6 size-7 text-ouro-escuro"
-                  strokeWidth={1.25}
-                />
-                <h3 className="mt-5 font-display-sm text-lg">{etapa.titulo}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-cinza-2">
-                  {etapa.texto}
-                </p>
+                <div className="min-w-0">
+                  <Icone
+                    nome={etapa.icone}
+                    className="hidden size-7 text-ouro-escuro sm:mt-6 sm:block"
+                    strokeWidth={1.25}
+                  />
+                  <h3 className="font-display-sm text-base sm:mt-5 sm:text-lg">
+                    {etapa.titulo}
+                  </h3>
+                  <p className="mt-1 text-sm leading-relaxed text-cinza-2 sm:mt-2">
+                    {etapa.texto}
+                  </p>
+                </div>
               </li>
             ))}
           </ol>
@@ -104,9 +114,15 @@ export function SecaoMontePeca() {
         {/* Faixa de garantias: responde à pergunta que trava o clique — "o que
             acontece comigo depois que eu mandar isso?". Só afirmações que o
             formulário cumpre ou que a loja já declara. */}
-        <ul className="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-lg)] bg-onix/8 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Duas colunas no mobile (regra da casa) com o ícone acima do texto;
+            no `sm` o ícone volta para o lado. Uma coluna de linhas soltas
+            esticava a faixa por duas telas. */}
+        <ul className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-lg)] bg-onix/8 lg:grid-cols-4">
           {montePeca.garantias.map((g) => (
-            <li key={g.titulo} className="flex items-center gap-4 bg-marfim-2 px-5 py-5">
+            <li
+              key={g.titulo}
+              className="flex flex-col items-start gap-2.5 bg-marfim-2 px-4 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-5"
+            >
               <Icone nome={g.icone} className="size-6 shrink-0 text-ouro-escuro" />
               <div className="min-w-0">
                 <p className="font-sans text-sm font-medium">{g.titulo}</p>
@@ -138,7 +154,7 @@ const ICONES_PERMITIDOS = [
   "Handshake",
 ] as const;
 
-function Icone({
+export function Icone({
   nome,
   className,
   strokeWidth = 1.5,
@@ -161,34 +177,10 @@ function Icone({
   return Componente ? <Componente className={className} strokeWidth={strokeWidth} /> : null;
 }
 
-export function SecaoExperiencia({ beneficios }: { beneficios: Benefit[] }) {
-  if (beneficios.length === 0) return null;
-
-  return (
-    <Section tone="light" luz={0.25}>
-      <SectionInner>
-        <SectionHeading
-          etiqueta={textos.experiencia.etiqueta}
-          titulo={textos.experiencia.titulo}
-          subtitulo={textos.experiencia.subtitulo}
-          tone="light"
-        />
-
-        <ul className="vitrine mt-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          {beneficios.map((b) => (
-            <li key={b.id} className="cartao cartao--estatico p-6">
-              <Icone nome={b.icon} className="size-6 text-ouro-escuro" />
-              <h3 className="mt-4 font-display-sm text-lg">{b.title}</h3>
-              {b.description && (
-                <p className="mt-2 text-sm leading-relaxed text-cinza-2">{b.description}</p>
-              )}
-            </li>
-          ))}
-        </ul>
-      </SectionInner>
-    </Section>
-  );
-}
+/* A seção "Experiência PR Gold" SAIU da home a pedido do cliente: os quatro
+   benefícios viraram a linha de confiança do hero (ver `Hero.tsx`), onde
+   trabalham na primeira dobra em vez de repetir o argumento no meio da
+   página. Os benefícios continuam editáveis no painel — só o palco mudou. */
 
 /* ── 10. Sobre a marca ──────────────────────────────────────────────────── */
 

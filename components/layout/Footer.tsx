@@ -62,8 +62,11 @@ export function Footer() {
   return (
     <footer className="border-t border-ouro/20 bg-onix text-marfim">
       <div className="shell py-14 md:py-20">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
-          <div className="lg:col-span-1">
+        {/* Duas colunas no mobile (regra da casa): Categorias e PR Gold lado a
+            lado. Marca e Atendimento, que têm linhas longas, atravessam as
+            duas. Em coluna única o rodapé media três telas de rolagem. */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:gap-12 lg:grid-cols-4">
+          <div className="col-span-2 lg:col-span-1">
             <Logo tone="dark" tamanho="md" />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-cinza">
               {settings.footerTagline}
@@ -108,7 +111,7 @@ export function Footer() {
             </ul>
           </nav>
 
-          <div>
+          <div className="col-span-2 md:col-span-1">
             <h2 className="eyebrow mb-5 text-ouro">Atendimento</h2>
             <ul className="space-y-3">
               {contatos.map((c) => {

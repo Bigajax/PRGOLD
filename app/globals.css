@@ -36,6 +36,14 @@
   --color-ouro-claro: #e7cb78; /* hover e estado ativo, só no escuro */
   --color-ouro-escuro: #77621f; /* texto e ícone dourados no claro */
 
+  /* A cor da LUZ — o âmbar do facho das fotos de estúdio da PR Gold.
+     Não é cor de texto nem de borda: existe só para o feixe e a luz de
+     ambiente. O `ouro` dos controles é metal; isto é luz. E por ser muito
+     mais luminosa que o ouro (L 0,54 contra 0,45), ela pode aparecer com o
+     dobro da presença causando MENOS dano de contraste — a conta está nos
+     blocos da `.luz-ambiente`. */
+  --color-luz: #f2b83a;
+
   /* ── Claro: o balcão ──────────────────────────────────────────────────── */
   --color-marfim: #f4f0e8; /* off-white — fundo das seções claras */
   --color-marfim-2: #ebe6db; /* superfície alternada dentro do claro */
@@ -248,18 +256,118 @@ body {
   opacity: 0.4;
 }
 
-/* 2. Feixe vertical de fundo: usado atrás do hero e da faixa de CTA final.
-      Não é um gradiente de página inteira — é uma coluna estreita de luz. */
+/* 2. FEIXE VERTICAL — o facho fotográfico.
+      ==================================================================
+      Nas fotos da PR Gold existe uma constante de estúdio: uma coluna de luz
+      quente atravessa o quadro na vertical, com núcleo estourado, e a PEÇA
+      OCLUI o facho — o meio do quadro fica escuro e a luz explode acima e
+      abaixo do estojo. Este elemento reproduz as três camadas:
+
+        elemento  -> halo: a luz que sobra no ar ao redor da coluna
+        ::before  -> coluna: o corpo do facho, pés largos e centro apertado
+        ::after   -> núcleo: a linha estourada de 2px
+
+      A ZONA DE OCLUSÃO (máscara a 12% na faixa vertical de 36% a 64%) não é
+      só fidelidade à foto — é o que protege o texto. Toda tela que usa o
+      feixe centraliza conteúdo (404, erro, login), e é exatamente ali que a
+      luz apaga, como o estojo a apagaria.
+
+      TETOS MEDIDOS, não estimados — pior caso com halo e coluna somados:
+        eyebrow ouro na borda da zona de oclusão (36% de altura) -> 5,06:1
+        texto cinza no centro da zona                            -> 6,3:1
+        marfim em qualquer ponto                                 -> >= 6,2:1
+      Fora da zona, onde a coluna acende de verdade, não passa texto pequeno:
+      é área vazia de seção, botão de fundo opaco ou cartão que oclui o facho.
+      Só é seguro sobre fundo ESCURO — sobre marfim, `screen` não teria o que
+      clarear e o contraste do texto escuro despencaria. */
 .feixe-vertical {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
   background: radial-gradient(
-    58% 42% at 50% 50%,
-    rgba(212, 175, 55, 0.16) 0%,
-    rgba(212, 175, 55, 0.05) 42%,
+    60% 45% at 50% 50%,
+    color-mix(in srgb, var(--color-luz) 8%, transparent) 0%,
+    color-mix(in srgb, var(--color-luz) 3%, transparent) 45%,
     transparent 72%
   );
+}
+
+/* A coluna. O degradê horizontal tem três larguras numa só — pés largos e
+   fracos, centro apertado e quente — e é isso que lê como luz de estúdio em
+   vez de listra pintada. A máscara vertical é a oclusão: nasce no escuro,
+   apaga no meio, volta a acender embaixo. */
+.feixe-vertical::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: clamp(9rem, 26vw, 15rem);
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--color-luz) 10%, transparent) 30%,
+    color-mix(in srgb, var(--color-luz) 32%, transparent) 50%,
+    color-mix(in srgb, var(--color-luz) 10%, transparent) 70%,
+    transparent
+  );
+  filter: blur(14px);
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 8%,
+    #000 22%,
+    rgba(0, 0, 0, 0.12) 36%,
+    rgba(0, 0, 0, 0.12) 64%,
+    #000 78%,
+    #000 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 8%,
+    #000 22%,
+    rgba(0, 0, 0, 0.12) 36%,
+    rgba(0, 0, 0, 0.12) 64%,
+    #000 78%,
+    #000 92%,
+    transparent 100%
+  );
+}
+
+/* O núcleo. `plus-lighter` soma luz de verdade — mesma escolha do núcleo da
+   luz de ambiente. O tom mais claro que `ouro-claro` (243/226/166) é o
+   estouro do centro do facho nas fotos — só existe aqui.
+
+   Os pontos quentes vivem SÓ nas extremidades (5-12% e 88-95%), mais
+   comprimidos que a oclusão da coluna — e isso foi visto em tela, não
+   estimado: com o quente descendo até 22%, a linha atravessava o eyebrow
+   "Erro 404" na janela compacta, onde o conteúdo centralizado começa mais
+   alto do que a conta de tela cheia sugere. Texto convive com o brilho
+   difuso da coluna, mas não com uma linha acesa de 2px cortando uma letra. */
+.feixe-vertical::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, color-mix(in srgb, var(--color-luz) 55%, white) 85%, transparent) 6%,
+    color-mix(in srgb, var(--color-luz) 70%, transparent) 12%,
+    color-mix(in srgb, var(--color-luz) 7%, transparent) 24%,
+    color-mix(in srgb, var(--color-luz) 7%, transparent) 76%,
+    color-mix(in srgb, var(--color-luz) 70%, transparent) 88%,
+    color-mix(in srgb, color-mix(in srgb, var(--color-luz) 55%, white) 85%, transparent) 94%,
+    transparent 100%
+  );
+  mix-blend-mode: plus-lighter;
 }
 
 /* 3. LUZ DE AMBIENTE — o feixe deixa de ser de seção e vira atmosfera.
@@ -300,7 +408,12 @@ body {
 }
 
 /* Halo: a massa de luz. Fica um pouco à esquerda do núcleo para o conjunto não
-   virar um eixo simétrico, que leria como divisória. */
+   virar um eixo simétrico, que leria como divisória.
+
+   Houve uma versão em que esta camada era a FAIXA fotográfica de página
+   inteira — coluna âmbar centrada, de ponta a ponta. O cliente viu e pediu
+   para retirar: a faixa contínua vive só nas seções escuras de exposição
+   (`.feixe-vertical`); aqui fica a atmosfera discreta. */
 .luz-ambiente::before {
   content: "";
   position: absolute;
@@ -323,30 +436,10 @@ body {
     transform 120ms linear;
 }
 
-/* Núcleo: a origem da luz. Nasce e morre em transparente — uma linha reta de
-   ponta a ponta leria como neon, que é exatamente o que isto não é. */
-.luz-ambiente::after {
-  content: "";
-  position: absolute;
-  top: -10%;
-  left: 70%;
-  width: 2px;
-  height: 120vh;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    color-mix(in srgb, var(--color-ouro) 20%, transparent) 22%,
-    color-mix(in srgb, var(--color-ouro-claro) 60%, transparent) 50%,
-    color-mix(in srgb, var(--color-ouro) 20%, transparent) 78%,
-    transparent
-  );
-  /* 28%, dentro da faixa de 20-35% do briefing. Em 50% o núcleo parava de ser
-     origem de luz e virava uma linha desenhada atravessando os cartões — o
-     "neon" que esta camada existe para não ser. */
-  opacity: calc(var(--luz-forca) * 0.28);
-  mix-blend-mode: plus-lighter;
-  transition: opacity 600ms linear;
-}
+/* O núcleo (fio vertical de 2px que descia a janela a 70% da largura) FOI
+   RETIRADO a pedido do cliente: por mais fraco, ele lia como um risco
+   atravessando as páginas. A atmosfera agora é só halo + grão; linha de luz
+   é vocabulário exclusivo do `.feixe-vertical` nas seções escuras. */
 
 /* Sobre fundo claro o BLEND MUDA, e essa é a parte que não é óbvia.
    `screen` só sabe clarear. O marfim já está em 96% de luminosidade, então
@@ -372,11 +465,6 @@ body {
 .luz-ambiente[data-fundo="claro"]::before {
   mix-blend-mode: multiply;
   opacity: calc(var(--luz-forca) * 0.18);
-}
-
-.luz-ambiente[data-fundo="claro"]::after {
-  mix-blend-mode: multiply;
-  opacity: calc(var(--luz-forca) * 0.22);
 }
 
 /* Grão — a camada que faz o conjunto assentar.
@@ -721,6 +809,110 @@ body {
 @media (min-width: 1024px) {
   .faixa-categorias {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* ── Faixa de coleções ────────────────────────────────────────────────────
+   Mesma mecânica da faixa de categorias: no mobile é carrossel de toque com o
+   PRÓXIMO cartão aparecendo pela borda — o sinal de "tem mais para o lado" —
+   e do `sm` em diante vira grade. A troca vive aqui, numa media query, pelo
+   motivo documentado na faixa de categorias: duas declarações de `display`
+   em camadas diferentes não podem disputar no JSX. */
+.faixa-colecoes {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  margin-right: calc(-1 * var(--shell-pad));
+  padding-right: var(--shell-pad);
+  padding-block: 0.5rem;
+}
+
+.faixa-colecoes::-webkit-scrollbar {
+  display: none;
+}
+
+/* 74vw: o cartão domina a tela e sobra um quarto do vizinho — visível o
+   bastante para convidar o gesto, estreito demais para ler como coluna. */
+.faixa-colecoes > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 74vw;
+  max-width: 22rem;
+}
+
+@media (min-width: 640px) {
+  .faixa-colecoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    overflow: visible;
+    margin-right: 0;
+    padding-right: 0;
+    padding-block: 0;
+  }
+
+  .faixa-colecoes > * {
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .faixa-colecoes {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* ── Faixa do Instagram ───────────────────────────────────────────────────
+   No mobile, oito quadrados em grade viravam uma coluna de quatro fileiras —
+   mais bastidor que a home comporta. Carrossel de toque com dois quadrados e
+   a espiada do terceiro; a grade volta no `md`. */
+.faixa-instagram {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  margin-right: calc(-1 * var(--shell-pad));
+  padding-right: var(--shell-pad);
+  padding-block: 0.5rem;
+}
+
+.faixa-instagram::-webkit-scrollbar {
+  display: none;
+}
+
+.faixa-instagram > * {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 40vw;
+  max-width: 11rem;
+}
+
+@media (min-width: 768px) {
+  .faixa-instagram {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
+    overflow: visible;
+    margin-right: 0;
+    padding-right: 0;
+    padding-block: 0;
+  }
+
+  .faixa-instagram > * {
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .faixa-instagram {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: 1.5rem;
   }
 }

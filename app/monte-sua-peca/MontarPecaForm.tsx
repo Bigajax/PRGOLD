@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { ArrowLeft, ArrowRight, CircleCheck, ImagePlus, X } from "lucide-react";
 import { textos } from "@/config/textos";
 import {
@@ -110,6 +110,25 @@ export function MontarPecaForm({
     setDados((d) => ({ ...d, [campo]: valor }));
     setErro(null);
   };
+
+  /* Ao trocar de etapa, o formulário volta ao próprio topo. Sem isto, quem
+     avança a partir do fim de uma etapa longa (a de detalhes, no celular) cai
+     no MEIO da etapa seguinte e precisa rolar para cima para entender onde
+     está. Vale para o modal (rola o painel) e para a página (rola a janela). */
+  const topoRef = useRef<HTMLDivElement>(null);
+  const primeiraRenderizacao = useRef(true);
+
+  useEffect(() => {
+    if (primeiraRenderizacao.current) {
+      primeiraRenderizacao.current = false;
+      return;
+    }
+    const suave = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    topoRef.current?.scrollIntoView({
+      behavior: suave ? "smooth" : "auto",
+      block: "start",
+    });
+  }, [etapa]);
 
   function validaEtapa(n: number): boolean {
     const checa = (r: { success: boolean; error?: { issues: { message: string }[] } }) => {
@@ -282,7 +301,7 @@ export function MontarPecaForm({
   }
 
   return (
-    <div>
+    <div ref={topoRef} className="scroll-mt-24">
       {/* Progresso: fios que se acendem, na mesma gramática da vitrine. */}
       <ol className="flex items-center gap-2" aria-label="Etapas">
         {ETAPAS.map((nome, i) => (
@@ -294,17 +313,27 @@ export function MontarPecaForm({
               aria-hidden
             />
             <span
-              className={`mt-2 block truncate font-sans text-[10px] tracking-[0.12em] uppercase ${
+              className={`mt-2 hidden truncate font-sans text-[10px] tracking-[0.12em] uppercase sm:block ${
                 i === etapa ? "text-ouro-escuro" : "text-cinza-2"
               }`}
             >
-              <span className="hidden sm:inline">{nome.curto}</span>
-              <span className="sm:hidden">{i + 1}</span>
+              {nome.curto}
             </span>
             {i === etapa && <span className="sr-only">Etapa atual</span>}
           </li>
         ))}
       </ol>
+
+      {/* No celular não cabe um rótulo sob cada fio — e "1 2 3 4 5" não diz
+          onde a pessoa está. Uma linha só: a contagem e o nome da etapa. */}
+      <p className="mt-2 flex items-baseline justify-between sm:hidden" aria-hidden>
+        <span className="font-sans text-[10px] tracking-[0.12em] text-cinza-2 uppercase">
+          Etapa {etapa + 1} de {ETAPAS.length}
+        </span>
+        <span className="font-sans text-[10px] tracking-[0.12em] text-ouro-escuro uppercase">
+          {ETAPAS[etapa].curto}
+        </span>
+      </p>
 
       <div className={`mt-8 ${compacto ? "" : "min-h-[22rem]"}`}>
         {etapa === 0 && (

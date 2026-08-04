@@ -49,20 +49,25 @@ export function SecaoCategorias({ categorias }: { categorias: Category[] }) {
           }
         />
 
-        {/* Duas colunas no mobile, quatro no desktop — e o primeiro cartão de
-            cada fileira ocupa duas delas. A assimetria não é enfeite: é o que
-            dá uma entrada por fileira e impede que seis retratos iguais leiam
-            como grade de estoque. */}
+        {/* Duas colunas em toda tela — e o primeiro cartão de cada trio ocupa
+            as duas, no mobile inclusive: fileira cheia, depois dupla. A
+            assimetria não é enfeite: é o que dá uma entrada por fileira e
+            impede que seis retratos iguais leiam como grade de estoque. */}
         <ul className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
           {categorias.map((c, i) => {
             const largo = ritmoLargo && i % 3 === 0;
             return (
-              <li key={c.slug} className={largo ? "lg:col-span-2" : undefined}>
+              <li key={c.slug} className={largo ? "col-span-2" : undefined}>
                 <Link href={`/catalogo/${c.slug}`} className="cartao group block">
-                  {/* Retrato no mobile, paisagem de altura fixa no desktop: é a
-                      altura fixa que faz o cartão largo e os estreitos fecharem
-                      a fileira na mesma linha de base. */}
-                  <span className="relative block aspect-[3/4] overflow-hidden rounded-[var(--radius-lg)] bg-onix lg:aspect-auto lg:h-64">
+                  {/* O largo é paisagem (como o cartão de abertura de um
+                      lookbook) e os estreitos são retrato. No desktop a altura
+                      fixa é o que faz largo e estreitos fecharem a fileira na
+                      mesma linha de base. */}
+                  <span
+                    className={`relative block overflow-hidden rounded-[var(--radius-lg)] bg-onix lg:aspect-auto lg:h-64 ${
+                      largo ? "aspect-[15/8]" : "aspect-[3/4]"
+                    }`}
+                  >
                     {c.image ? (
                       <Image
                         src={c.image}
@@ -70,7 +75,7 @@ export function SecaoCategorias({ categorias }: { categorias: Category[] }) {
                         fill
                         sizes={
                           largo
-                            ? "(max-width: 1024px) 45vw, 46vw"
+                            ? "(max-width: 1024px) 92vw, 46vw"
                             : "(max-width: 1024px) 45vw, 23vw"
                         }
                         className="img-zoom object-cover opacity-90"
@@ -80,7 +85,11 @@ export function SecaoCategorias({ categorias }: { categorias: Category[] }) {
                     )}
                     <span className="feixe-varre" aria-hidden />
                     <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-onix via-onix/70 to-transparent p-4 pt-12">
-                      <span className="font-display-sm text-base text-marfim lg:text-lg">
+                      <span
+                        className={`font-display-sm text-marfim ${
+                          largo ? "text-lg" : "text-base lg:text-lg"
+                        }`}
+                      >
                         {c.name}
                       </span>
                       {/* Só um sinal de "entra por aqui". O cartão inteiro é o
@@ -150,33 +159,40 @@ export function SecaoColecoes({ colecoes }: { colecoes: Collection[] }) {
           }
         />
 
-        <div className="vitrine mt-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          {colecoes.map((c) => (
-            <Link key={c.slug} href={`/colecoes/${c.slug}`} className="cartao group block">
-              <span className="relative m-1.5 block aspect-[4/5] overflow-hidden rounded-[0.875rem] bg-grafite">
-                {c.image ? (
-                  <Image
-                    src={c.image}
-                    alt=""
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="img-zoom object-cover"
-                  />
-                ) : (
-                  <PlaceholderJoia />
-                )}
-                <span className="feixe-varre" aria-hidden />
-              </span>
-              <span className="block p-4 pt-2.5">
-                <span className="block font-display-sm text-lg text-marfim">{c.name}</span>
-                {c.description && (
-                  <span className="mt-1 block text-sm leading-relaxed text-cinza">
-                    {c.description}
-                  </span>
-                )}
-              </span>
-            </Link>
-          ))}
+        {/* O facho fotográfico atrás da grade: os cartões ocluem a coluna como
+            o estojo oclui a luz nas fotos, e o feixe aparece por cima, por
+            baixo e pelas frestas. O `-inset-y-10` estica a luz para além da
+            grade — a utilitária vence o `inset: 0` da classe de componente. */}
+        <div className="relative mt-10">
+          <span className="feixe-vertical -inset-y-10" aria-hidden />
+          <div className="faixa-colecoes">
+            {colecoes.map((c) => (
+              <Link key={c.slug} href={`/colecoes/${c.slug}`} className="cartao group block">
+                <span className="relative m-1.5 block aspect-[4/5] overflow-hidden rounded-[0.875rem] bg-grafite">
+                  {c.image ? (
+                    <Image
+                      src={c.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="img-zoom object-cover"
+                    />
+                  ) : (
+                    <PlaceholderJoia />
+                  )}
+                  <span className="feixe-varre" aria-hidden />
+                </span>
+                <span className="block p-4 pt-2.5">
+                  <span className="block font-display-sm text-lg text-marfim">{c.name}</span>
+                  {c.description && (
+                    <span className="mt-1 block text-sm leading-relaxed text-cinza">
+                      {c.description}
+                    </span>
+                  )}
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </SectionInner>
     </Section>
@@ -198,12 +214,15 @@ export function SecaoMomentos({ momentos }: { momentos: Moment[] }) {
           tone="light"
         />
 
-        <ul className="mt-10 flex flex-wrap gap-3">
+        {/* Duas colunas no mobile: os balões em varal quebravam em fileiras
+            desiguais e a lista lia como nuvem de tags, não como menu de
+            ocasiões. No `sm` volta o varal, que ali fecha numa linha só. */}
+        <ul className="mt-10 grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:gap-3">
           {momentos.map((m) => (
             <li key={m.slug}>
               <Link
                 href={`/catalogo?${m.filterQuery}`}
-                className="tap inline-flex min-h-12 items-center rounded-full border border-onix/12 bg-onix/[0.04] px-6 text-sm font-medium hover:border-onix/20 hover:bg-onix/[0.07] hover:text-ouro-escuro"
+                className="tap flex min-h-12 w-full items-center justify-center rounded-full border border-onix/12 bg-onix/[0.04] px-4 py-2.5 text-center text-sm leading-tight font-medium hover:border-onix/20 hover:bg-onix/[0.07] hover:text-ouro-escuro sm:inline-flex sm:w-auto sm:px-6 sm:text-left"
               >
                 {m.name}
               </Link>
@@ -247,7 +266,7 @@ export function SecaoInstagram({
         />
 
         <Reveal>
-          <div className="vitrine mt-10 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
+          <div className="faixa-instagram mt-10">
             {posts.map((post) => (
               <a
                 key={post.id}

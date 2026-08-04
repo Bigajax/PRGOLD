@@ -5,7 +5,8 @@ import { textos } from "@/config/textos";
 import { midia, site } from "@/config/site";
 import { ButtonLink } from "@/components/ui/Button";
 import { VideoAmbiente } from "./VideoAmbiente";
-import type { Banner } from "@/types";
+import { Icone } from "./Editorial";
+import type { Banner, Benefit } from "@/types";
 
 /**
  * Hero claro.
@@ -20,7 +21,15 @@ import type { Banner } from "@/types";
  * pouco: dois retângulos idênticos e alinhados leem como banner; o desnível
  * leve dá ritmo e faz a composição parecer montada, não empilhada.
  */
-export function Hero({ banner }: { banner: Banner }) {
+export function Hero({
+  banner,
+  beneficios = [],
+}: {
+  banner: Banner;
+  /** A antiga seção "Experiência PR Gold", agora como linha de confiança
+   *  discreta sob os CTAs — só o título de cada benefício, sem descrição. */
+  beneficios?: Benefit[];
+}) {
   const { hero } = textos;
 
   const titulo = hero.titulo;
@@ -88,6 +97,23 @@ export function Hero({ banner }: { banner: Banner }) {
               {hero.ctaSecundario}
             </ButtonLink>
           </div>
+
+          {/* Linha de confiança: os benefícios que ocupavam uma seção inteira
+              no meio da home, reduzidos ao essencial — ícone e título.
+              No mobile são duas colunas alinhadas: no varal livre, larguras
+              diferentes deixavam as fileiras desencontradas. */}
+          {beneficios.length > 0 && (
+            <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-2.5 sm:flex sm:flex-wrap sm:gap-x-6">
+              {beneficios.map((b) => (
+                <li key={b.id} className="flex items-start gap-2">
+                  <Icone nome={b.icon} className="mt-0.5 size-4 shrink-0 text-ouro-escuro" />
+                  <span className="font-sans text-xs leading-snug font-medium text-cinza-2">
+                    {b.title}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Vídeos.
@@ -100,19 +126,27 @@ export function Hero({ banner }: { banner: Banner }) {
             em tela baixa ele cede, e é o hero que encolhe em vez de empurrar a
             faixa para fora da primeira dobra. */}
         {midia.hero.length > 0 ? (
-          <div className="flex justify-center gap-4 sm:gap-5 lg:justify-end">
+          <div className="flex justify-center gap-5 sm:gap-6 lg:justify-end">
             {midia.hero.map((video, i) => (
-              <div
-                key={video.src}
-                // Sem sombra: sobre o marfim ela empoçava num borrão cinza logo
-                // acima da faixa de elos. O vídeo é quase preto — o recorte já
-                // se separa do fundo sozinho, que é a regra da paleta (a
-                // separação vem de fio, não de elevação).
-                className={`relative aspect-[9/16] w-[44vw] max-w-[17rem] overflow-hidden rounded-[var(--radius-xl)] bg-onix sm:w-[16rem] lg:h-[clamp(18rem,calc(100svh-18rem),30rem)] lg:w-auto lg:max-w-none ${
-                  i === 1 ? "lg:translate-y-10" : ""
-                }`}
-              >
-                <VideoAmbiente src={video.src} poster={video.poster} />
+              <div key={video.src} className={`relative ${i === 1 ? "lg:translate-y-10" : ""}`}>
+                {/* O halo: a luz âmbar da fotografia da marca, atrás do
+                    estojo. É o que tira a moldura do "retângulo seco" sem
+                    recorrer a sombra — que sobre o marfim empoçava num borrão
+                    cinza (o motivo de nunca ter havido sombra aqui). */}
+                <span
+                  aria-hidden
+                  className="absolute -inset-10 bg-radial from-luz/25 via-luz/10 to-transparent"
+                />
+                {/* Moldura dupla de estojo: fio externo afastado (passe-
+                    partout) + fio rente ao vídeo. Separação por fio é a regra
+                    da paleta — aqui ela vira ornamento. */}
+                <span
+                  aria-hidden
+                  className="absolute -inset-2 rounded-[calc(var(--radius-xl)+0.5rem)] border border-ouro-escuro/25"
+                />
+                <div className="relative aspect-[9/16] w-[44vw] max-w-[17rem] overflow-hidden rounded-[var(--radius-xl)] bg-onix ring-1 ring-ouro/45 sm:w-[16rem] lg:h-[clamp(18rem,calc(100svh-18rem),30rem)] lg:w-auto lg:max-w-none">
+                  <VideoAmbiente src={video.src} poster={video.poster} />
+                </div>
               </div>
             ))}
           </div>

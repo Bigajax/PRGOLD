@@ -53,14 +53,39 @@ export function PlaceholderJoia({ className = "" }: { className?: string }) {
         fill="none"
         role="presentation"
       >
-        {/* O feixe */}
+        {/* O feixe, com a oclusão das fotos: aceso acima do estojo (que começa
+            em y=40), quase nada atrás dele, um resto de luz sob a base. */}
         <defs>
-          <linearGradient id="feixe-ph" x1="60" y1="0" x2="60" y2="150">
-            <stop offset="0%" stopColor="#D4AF37" stopOpacity="0" />
-            <stop offset="45%" stopColor="#D4AF37" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#D4AF37" stopOpacity="0" />
+          <linearGradient
+            id="feixe-ph"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="150"
+            gradientUnits="userSpaceOnUse"
+          >
+            {/* #F9E0A6/#F2B83A: a família da `--color-luz` do tema — o facho
+                é luz, não o ouro dos controles. */}
+            <stop offset="0" stopColor="#F9E0A6" stopOpacity="0.85" />
+            <stop offset="0.22" stopColor="#F2B83A" stopOpacity="0.5" />
+            <stop offset="0.3" stopColor="#F2B83A" stopOpacity="0.08" />
+            <stop offset="0.78" stopColor="#F2B83A" stopOpacity="0.08" />
+            <stop offset="1" stopColor="#F2B83A" stopOpacity="0.3" />
+          </linearGradient>
+          <linearGradient
+            id="feixe-ph-halo"
+            x1="40"
+            y1="0"
+            x2="80"
+            y2="0"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop offset="0" stopColor="#F2B83A" stopOpacity="0" />
+            <stop offset="0.5" stopColor="#F2B83A" stopOpacity="0.16" />
+            <stop offset="1" stopColor="#F2B83A" stopOpacity="0" />
           </linearGradient>
         </defs>
+        <rect x="40" y="0" width="40" height="150" fill="url(#feixe-ph-halo)" />
         <rect x="59" y="0" width="2" height="150" fill="url(#feixe-ph)" />
         {/* Estojo aberto */}
         <path

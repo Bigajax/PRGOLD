@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, House, Search, Sparkles } from "lucide-react";
+import { Gem, Heart, House, Search } from "lucide-react";
 import { IconeWhatsApp } from "@/components/ui/Icones";
 import { useSettings } from "@/components/providers/SiteProvider";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -87,7 +87,7 @@ export function FloatingWhatsApp() {
       // Círculo verde com o glifo branco: é a forma em que o WhatsApp é
       // reconhecido em qualquer site. O raio 0 do sistema não vale aqui — a
       // própria paleta abre exceção para controle circular.
-      className="tap fixed right-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 grid size-13 place-items-center rounded-full bg-whats text-white shadow-lg lg:bottom-8"
+      className="tap fixed right-4 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-40 grid size-13 place-items-center rounded-full bg-whats text-white shadow-lg lg:bottom-8"
     >
       <IconeWhatsApp className="size-7" />
     </a>
@@ -103,17 +103,26 @@ export function TabBar() {
 
   const itens = [
     { label: "Início", href: "/", icone: House },
-    { label: "Catálogo", href: "/catalogo", icone: Sparkles },
+    // `Gem`: numa joalheria, o catálogo é onde estão as joias. O `Sparkles`
+    // que estava aqui lia como "efeitos" ou "IA", não como vitrine.
+    { label: "Catálogo", href: "/catalogo", icone: Gem },
     { label: "Buscar", href: null, icone: Search, acao: abrir },
     { label: "Favoritos", href: "/favoritos", icone: Heart, contador: pronto ? total : 0 },
   ];
 
+  /* Pílula flutuante de vidro, no desenho das barras do iOS: descolada das
+     bordas, raio total, fundo translúcido com blur.
+
+     A OPACIDADE DO VIDRO É MEDIDA, não estética: sobre seção clara o blur
+     mistura marfim no fundo da pílula. Em 70% de ônix o rótulo `cinza` caía
+     para 2,2:1; em 90% ele mede 5,0:1 e o ativo em `ouro-claro` 4,7:1 — por
+     isso o ativo usa `ouro-claro` (o `ouro` puro media 3,6:1 no pior caso). */
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-ouro/20 bg-onix pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-4 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 lg:hidden"
     >
-      <ul className="grid grid-cols-4">
+      <ul className="mx-auto grid max-w-md grid-cols-4 overflow-hidden rounded-full border border-marfim/10 bg-onix/90 shadow-[0_12px_32px_rgba(8,8,8,0.35)] backdrop-blur-xl">
         {itens.map((item) => {
           const Icone = item.icone;
           const ativo = item.href
@@ -121,14 +130,14 @@ export function TabBar() {
               ? pathname === "/"
               : pathname.startsWith(item.href)
             : false;
-          const cor = ativo ? "text-ouro" : "text-cinza";
+          const cor = ativo ? "text-ouro-claro" : "text-cinza";
 
           const conteudo = (
             <>
               <span className="relative">
                 <Icone className="size-5" aria-hidden />
                 {item.contador ? (
-                  <span className="absolute -top-1.5 -right-2 grid size-4 place-items-center bg-ouro font-sans text-[9px] font-semibold text-onix">
+                  <span className="absolute -top-1.5 -right-2 grid size-4 place-items-center rounded-full bg-ouro font-sans text-[9px] font-semibold text-onix">
                     {item.contador > 9 ? "9+" : item.contador}
                   </span>
                 ) : null}
@@ -166,9 +175,10 @@ export function TabBar() {
   );
 }
 
-/** Espaçador da barra fixa: sem ele o rodapé fica atrás dela no mobile. */
+/** Espaçador da barra fixa: sem ele o rodapé fica atrás dela no mobile.
+ *  4,5rem = altura da pílula (3,5rem) + o respiro que a descola do rodapé. */
 export function TabBarSpacer() {
   const pathname = usePathname();
   if (ehPaginaDeProduto(pathname) || ehPainel(pathname)) return null;
-  return <div className="h-14 pb-[env(safe-area-inset-bottom)] lg:hidden" aria-hidden />;
+  return <div className="h-[4.5rem] pb-[env(safe-area-inset-bottom)] lg:hidden" aria-hidden />;
 }
