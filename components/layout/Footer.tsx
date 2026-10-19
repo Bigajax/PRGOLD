@@ -160,6 +160,17 @@ export function Footer() {
             © {ano} {settings.legalName || site.name}
             {settings.legalDocument ? ` · CNPJ ${settings.legalDocument}` : ""} ·{" "}
             Todos os direitos reservados.
+            <span className="mt-1.5 block">
+              vitrine por{" "}
+              <a
+                href="https://rafaelrazeira.com.br/vitrine-digital"
+                target="_blank"
+                rel="noopener"
+                className="hover:text-ouro"
+              >
+                Rafael Razeira Estúdio
+              </a>
+            </span>
           </p>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {menuLegal.map((item) => (
